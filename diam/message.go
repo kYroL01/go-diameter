@@ -63,15 +63,15 @@ func readerBufferSlice(buf *bytes.Buffer, l int) []byte {
 	return make([]byte, l)
 }
 
-// ReadMessage reads a binary stream from the reader and uses the given
-// dictionary to parse it.
+// ReadMessage reads a binary stream from the reader and uses the given dictionary to parse it.
+// it returns m even if the correspondence name is not found in the dictionary (external static function will be used)
 func ReadMessage(reader io.Reader, dictionary *dict.Parser) (*Message, error) {
 	buf := newReaderBuffer()
 	defer putReaderBuffer(buf)
 	m := &Message{dictionary: dictionary}
 	cmd, stream, err := m.readHeader(reader, buf)
 	if err != nil {
-		return nil, err
+		return m, err
 	}
 	m.stream = stream
 	if err = m.readBody(reader, buf, cmd, stream); err != nil {
