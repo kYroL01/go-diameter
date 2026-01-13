@@ -19,20 +19,22 @@ type DecodeError error
 
 // AVP is a Diameter attribute-value-pair.
 type AVP struct {
-	Code     uint32        // Code of this AVP
-	Flags    uint8         // Flags of this AVP
-	Length   int           // Length of this AVP's payload
-	VendorID uint32        // VendorId of this AVP
-	Data     datatype.Type // Data of this AVP (payload)
+	Code      uint32        // Code of this AVP
+	Flags     uint8         // Flags of this AVP
+	Length    int           // Length of this AVP's payload
+	HasVendor bool          // Whether this AVP has VendorId
+	VendorID  uint32        // VendorId of this AVP
+	Data      datatype.Type // Data of this AVP (payload)
 }
 
 // NewAVP creates and initializes a new AVP.
-func NewAVP(code uint32, flags uint8, vendor uint32, data datatype.Type) *AVP {
+func NewAVP(code uint32, flags uint8, vendor uint32, hasVendor bool, data datatype.Type) *AVP {
 	a := &AVP{
-		Code:     code,
-		Flags:    flags,
-		VendorID: vendor,
-		Data:     data,
+		Code:      code,
+		Flags:     flags,
+		VendorID:  vendor,
+		HasVendor: hasVendor,
+		Data:      data,
 	}
 	a.Length = a.headerLen() + a.Data.Len() // no padding length
 	if vendor > 0 && flags&avp.Vbit != avp.Vbit {

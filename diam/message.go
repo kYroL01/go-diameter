@@ -71,7 +71,7 @@ func ReadMessage(reader io.Reader, dictionary *dict.Parser) (*Message, error) {
 	m := &Message{dictionary: dictionary}
 	cmd, stream, err := m.readHeader(reader, buf)
 	if err != nil {
-		return m, err
+		return nil, err
 	}
 	m.stream = stream
 	if err = m.readBody(reader, buf, cmd, stream); err != nil {
@@ -214,23 +214,23 @@ func (m *Message) Dictionary() *dict.Parser {
 
 // NewAVP creates and initializes a new AVP and adds it to the Message.
 // It is not safe for concurrent calls.
-func (m *Message) NewAVP(code interface{}, flags uint8, vendor uint32, data datatype.Type) (*AVP, error) {
+func (m *Message) NewAVP(code interface{}, flags uint8, vendor uint32, hasVendor bool, data datatype.Type) (*AVP, error) {
 	var a *AVP
-	switch code.(type) {
+	switch c := code.(type) {
 	case int:
-		a = NewAVP(uint32(code.(int)), flags, vendor, data)
+		a = NewAVP(uint32(c), flags, vendor, hasVendor, data)
 	case uint32:
-		a = NewAVP(code.(uint32), flags, vendor, data)
+		a = NewAVP(c, flags, vendor, hasVendor, data)
 	case string:
 		dictAVP, err := m.Dictionary().FindAVPWithVendor(
 			m.Header.ApplicationID,
-			code.(string),
+			c,
 			vendor,
 		)
 		if err != nil {
 			return nil, err
 		}
-		a = NewAVP(dictAVP.Code, flags, vendor, data)
+		a = NewAVP(dictAVP.Code, flags, vendor, hasVendor, data)
 	}
 	m.AVP = append(m.AVP, a)
 	m.Header.MessageLength += uint32(a.Len())
@@ -506,7 +506,7 @@ func (m *Message) Answer(resultCode uint32) *Message {
 		m.Dictionary(),
 	)
 	if resultCode != 0 {
-		nm.NewAVP(avp.ResultCode, avp.Mbit, 0, datatype.Unsigned32(resultCode))
+		nm.NewAVP(avp.ResultCode, avp.Mbit, 0, false, datatype.Unsigned32(resultCode))
 	}
 	nm.stream = m.stream
 	return nm
