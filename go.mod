@@ -1,4 +1,4 @@
-module github.com/kYroL01/go-diameter/v4
+module github.com/fiorix/go-diameter/v4
 
 go 1.20
 
